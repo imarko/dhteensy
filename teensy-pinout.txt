@@ -1,0 +1,73 @@
++5V 1  40 ND
+B6  2  39 B7
+B5  3  38 D0
+B4  4  37 D1
+B3  5  36 D2
+B2  6  35 D3
+B1  7  34 D4
+B0  8  33 D5
+lo9  32 D6
+10 31 D7
+11 30 E0
+12 29 E1
+F0 13 28 C0
+F1 14 27 C1
+F2 15 26 C2
+F3 16 25 C3
+F417 24 C4
+F5 18 23 C5
+F6 19 22 C6
+F7 20 21 C7
+
+
+                          GND               +5V
+         PWM               27               26 PWM
+         PWM    INT0        0               25 PWM
+         PWM    INT1        1               24 PWM
+          RX    INT2        2               23
+           TX   INT3        3               22              (interior)
+                            4               21              36 INT4
+                            5               20              37 INT5
+             (LED on 6)     6               19 INT7
+                            7               18 INT6
+                            8               GND
+                            9               AREF
+(interior)                 10               38 A0
+32    28                   11               39 A1
+33    29                   12               40 A2
+34    30                   13               41 A3
+35    31        PWM        14               42 A4
+                PWM        15               43 A5          (bottom)
+                PWM        16               44 A6          5V GND RST
+                           17               45 A7
+
+
+
+
+
+
+
+
+
+                          Pin Assignments
+                         Using C Language
+                        GND            Vcc
+         OC1C OC0A      PB7            PB6 OC1B
+     SCL OC0B INT0      PD0            PB5 OC1A
+    SDA OC2B INT1       PD1            PB4 OC2A
+            RXD1 INT2   PD2            PB3 MISO
+             TXD1 INT3  PD3            PB2 MOSI
+                   ICP1 PD4            PB1 SCLK
+                  XCK1  PD5            PB0 SS
+     (LED on PD6)    T1 PD6            PE7 INT7 AIN1
+                     T0 PD7            PE6 INT6 AIN0
+                        PE0            GND
+                        PE1            AREF
+  (interior)            PC0            PF0 ADC0
+ PA4    PA0             PC1            PF1 ADC1
+ PA5    PA1             PC2            PF2 ADC2
+ PA6    PA2          T3 PC3            PF3 ADC3
+ PA7    PA3       OC3C  PC4            PF4 ADC4
+ALE               OC3B  PC5            PF5 ADC5
+                  OC3A  PC6            PF6 ADC6
+                   ICP3 PC7            PF7 ADC7

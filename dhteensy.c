@@ -49,11 +49,14 @@ uint16_t idle_count=0;
 
 int main(void)
 {
-	uint8_t b, d, mask, i, reset_idle;
-	uint8_t b_prev=0xFF, d_prev=0xFF;
+	uint8_t b, reset_idle, selector;
+	uint8_t b_prev[16];
 
+	for (selector=0; selector<14; selector++) {
+		b_prev[selector]=0;
+	}
 	// set for 16 MHz clock
-	CPU_PRESCALE(0);
+	/* CPU_PRESCALE(0); */
 
 	// Configure all port B and port D pins as inputs with pullup resistors.
 	// See the "Using I/O Pins" page for details.
@@ -71,7 +74,7 @@ int main(void)
 	LED_ON;
 	// Wait an extra second for the PC's operating system to load drivers
 	// and do whatever it does to actually be ready for input
-	_delay_ms(1000);
+	_delay_ms(100);
 	LED_OFF;
 
 	// Configure timer 0 to generate a timer overflow interrupt every
@@ -82,47 +85,46 @@ int main(void)
 	TCCR0B = 0x05;
 	TIMSK0 = (1<<TOIE0);
 
-	print("Begin keyboard example program\n");
-	print("All Port B or Port D pins are inputs with pullup resistors.\n");
-	print("Any connection to ground on Port B or D pins will result in\n");
-	print("keystrokes sent to the PC (and debug messages here).\n");
-
 	DDRB = 0xFF;
 	PORTB = 0xF0;
-	DDRB = 0x00;
 	while (1) {
-		// read all port B pins
-		b = PINB;
-		// check if any pins are low, but were high previously
-		mask = 1;
-		reset_idle = 0;
-		for (i=0; i<8; i++) {
-			if (((b & mask) == 0) && (b_prev & mask) != 0) {
-				usb_keyboard_press(KEY_B, KEY_SHIFT);
-				usb_keyboard_press(number_keys[i], 0);
-				print("Port B, bit ");
-				phex(i);
+		for (selector=0; selector<14; selector++) {
+			DDRB = 0xFF;
+			PORTB = (selector | 0xF0);
+			DDRB = 0x00;
+			_delay_us(100);
+			// read all port B pins
+			b = PINB;
+			b &= 0xF0;
+			// check if any pins are low, but were high previously
+			reset_idle = 0;
+
+			if (b_prev[selector] != b) {
+				/* usb_keyboard_press(KEY_B, KEY_SHIFT); */
+				/* print("selector "); */
+				phex((selector << 4) + (b >>4));
+				/* print(" bits "); */
+				/* phex(b); */
 				print("\n");
 				reset_idle = 1;
-				LED_ON;
+				/* LED_ON; */
 			}
-			mask = mask << 1;
+
+			// if any keypresses were detected, reset the idle counter
+			if (reset_idle) {
+				// variables shared with interrupt routines must be
+				// accessed carefully so the interrupt routine doesn't
+				// try to use the variable in the middle of our access
+				cli();
+				idle_count = 0;
+				sei();
+			}
+			// now the current pins will be the previous, and
+			// wait a short delay so we're not highly sensitive
+			// to mechanical "bounce".
+			b_prev[selector] = b;
+			/* _delay_ms(2); */
 		}
-		// if any keypresses were detected, reset the idle counter
-		if (reset_idle) {
-			// variables shared with interrupt routines must be
-			// accessed carefully so the interrupt routine doesn't
-			// try to use the variable in the middle of our access
-			cli();
-			idle_count = 0;
-			sei();
-		}
-		// now the current pins will be the previous, and
-		// wait a short delay so we're not highly sensitive
-		// to mechanical "bounce".
-		b_prev = b;
-		d_prev = d;
-		_delay_ms(2);
 	}
 }
 
@@ -136,9 +138,13 @@ ISR(TIMER0_OVF_vect)
 	if (idle_count > 61 * 8) {
 		idle_count = 0;
 		print("Timer Event :)\n");
-		/* usb_keyboard_press(KEY_SPACE, 0); */
 		LED_OFF;
 	}
 }
 
 
+/* 
+   Local Variables:
+   c-basic-offset: 8
+   End:
+*/

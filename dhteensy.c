@@ -58,10 +58,8 @@ int main(void)
 	// Configure all port B and port D pins as inputs with pullup resistors.
 	// See the "Using I/O Pins" page for details.
 	// http://www.pjrc.com/teensy/pins.html
-	DDRD = 0x00;
 	DDRB = 0x00;
 	PORTB = 0xFF;
-	PORTD = 0xFF;
 
 	// Initialize the USB, and then wait for the host to set configuration.
 	// If the Teensy is powered without a PC connected to the USB port,
@@ -88,10 +86,13 @@ int main(void)
 	print("All Port B or Port D pins are inputs with pullup resistors.\n");
 	print("Any connection to ground on Port B or D pins will result in\n");
 	print("keystrokes sent to the PC (and debug messages here).\n");
+
+	DDRB = 0xFF;
+	PORTB = 0xF0;
+	DDRB = 0x00;
 	while (1) {
-		// read all port B and port D pins
+		// read all port B pins
 		b = PINB;
-		d = PIND;
 		// check if any pins are low, but were high previously
 		mask = 1;
 		reset_idle = 0;
@@ -105,17 +106,6 @@ int main(void)
 				reset_idle = 1;
 				LED_ON;
 			}
-			/*
-			if (((d & mask) == 0) && (d_prev & mask) != 0) {
-				usb_keyboard_press(KEY_D, KEY_SHIFT);
-				usb_keyboard_press(number_keys[i], 0);
-				print("Port D, bit ");
-				phex(i);
-				print("\n");
-				reset_idle = 1;
-				LED_ON;
-			}
-			*/
 			mask = mask << 1;
 		}
 		// if any keypresses were detected, reset the idle counter

@@ -28,9 +28,18 @@
 #include "usb_keyboard_debug.h"
 #include "print.h"
 
+// Teensy 2.0: LED is active high
+#if defined(__AVR_ATmega32U4__) || defined(__AVR_AT90USB1286__)
+#define LED_ON          (PORTD |= (1<<6))
+#define LED_OFF         (PORTD &= ~(1<<6))
+
+// Teensy 1.0: LED is active low
+#else
+#define LED_ON  (PORTD &= ~(1<<6))
+#define LED_OFF (PORTD |= (1<<6))
+#endif
+
 #define LED_CONFIG	(DDRD |= (1<<6))
-#define LED_ON		(PORTD &= ~(1<<6))
-#define LED_OFF		(PORTD |= (1<<6))
 #define CPU_PRESCALE(n)	(CLKPR = 0x80, CLKPR = (n))
 
 uint8_t number_keys[10]=
@@ -60,9 +69,12 @@ int main(void)
 	usb_init();
 	while (!usb_configured()) /* wait */ ;
 
+	LED_CONFIG;
+	LED_ON;
 	// Wait an extra second for the PC's operating system to load drivers
 	// and do whatever it does to actually be ready for input
 	_delay_ms(1000);
+	LED_OFF;
 
 	// Configure timer 0 to generate a timer overflow interrupt every
 	// 256*1024 clock cycles, or approx 61 Hz when using 16 MHz clock
@@ -91,7 +103,9 @@ int main(void)
 				phex(i);
 				print("\n");
 				reset_idle = 1;
+				LED_ON;
 			}
+			/*
 			if (((d & mask) == 0) && (d_prev & mask) != 0) {
 				usb_keyboard_press(KEY_D, KEY_SHIFT);
 				usb_keyboard_press(number_keys[i], 0);
@@ -99,7 +113,9 @@ int main(void)
 				phex(i);
 				print("\n");
 				reset_idle = 1;
+				LED_ON;
 			}
+			*/
 			mask = mask << 1;
 		}
 		// if any keypresses were detected, reset the idle counter
@@ -130,7 +146,8 @@ ISR(TIMER0_OVF_vect)
 	if (idle_count > 61 * 8) {
 		idle_count = 0;
 		print("Timer Event :)\n");
-		usb_keyboard_press(KEY_SPACE, 0);
+		/* usb_keyboard_press(KEY_SPACE, 0); */
+		LED_OFF;
 	}
 }
 

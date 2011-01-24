@@ -28,18 +28,6 @@
 #include "usb_keyboard_debug.h"
 #include "print.h"
 
-// Teensy 2.0: LED is active high
-#if defined(__AVR_ATmega32U4__) || defined(__AVR_AT90USB1286__)
-#define LED_ON          (PORTD |= (1<<6))
-#define LED_OFF         (PORTD &= ~(1<<6))
-
-// Teensy 1.0: LED is active low
-#else
-#define LED_ON  (PORTD &= ~(1<<6))
-#define LED_OFF (PORTD |= (1<<6))
-#endif
-
-#define LED_CONFIG	(DDRD |= (1<<6))
 #define CPU_PRESCALE(n)	(CLKPR = 0x80, CLKPR = (n))
 
 uint8_t hex_keys[16]=
@@ -55,10 +43,6 @@ void init_ports() {
 	DDRB=0xFF;
 	/* D is mixed 0,1 write, 2,3,4,5 read*/
 	DDRD=0x03; /* 00000011 */
-
-	/* turn P7 off? */
-	/* DDRC=0xFF; */
-	/* PORTC=0x00; */
 }
 
 
@@ -72,19 +56,6 @@ void set_selector(uint8_t selector) {
 	   teensy:
 	   PE0, PB7, PD0, PD1
 	*/
-
-	/* set port modes */
-
-	/* DDRE |= (1<<0); */
-	/* DDRB |= (1<<7); */
-	/* DDRD |= (1<<0); */
-	/* DDRD |= (1<<1); */
-
-	/* DDRD = 0xFF; */
-	/* PORTD |= (1<<2); */
-	/* PORTD |= (1<<3); */
-	/* PORTD |= (1<<4); */
-	/* PORTD |= (1<<5); */
 
 	/* bit 0 */
 	if (selector & (1<<0)) {
@@ -123,16 +94,8 @@ int read_keys() {
 	   teensy:
 	   PD2,PD3,PD4,PD5
 	*/
+
 	uint8_t b;
-
-	/* set port modes */
-
-	/* DDRD &= ~(1<<2); */
-	/* DDRD &= ~(1<<3); */
-	/* DDRD &= ~(1<<4); */
-	/* DDRD &= ~(1<<5); */
-
-	/* DDRD = 0x00; */
 
 	// read all port B pins
 	b = PIND;
@@ -156,11 +119,12 @@ int main(void)
 	uint8_t b, reset_idle, selector;
 	uint8_t b_prev[16];
 
+	// set for 16 MHz clock
+	CPU_PRESCALE(0);
+
 	for (selector=0; selector<14; selector++) {
 		b_prev[selector]=0;
 	}
-	// set for 16 MHz clock
-	CPU_PRESCALE(0);
 
 	// init ports
 	init_ports();
@@ -168,28 +132,15 @@ int main(void)
 	// Initialize the USB, and then wait for the host to set configuration.
 	// If the Teensy is powered without a PC connected to the USB port,
 	// this will wait forever.
-	/* LED_CONFIG; */
-	/* LED_ON; */
 
 	usb_init();
 	while (!usb_configured()) /* wait */ ;
 
-	/* LED_OFF; */
 	set_led(0x00);
 
 	// Wait an extra second for the PC's operating system to load drivers
 	// and do whatever it does to actually be ready for input
 	_delay_ms(1000);
-
-	// Configure timer 0 to generate a timer overflow interrupt every
-	// 256*1024 clock cycles, or approx 61 Hz when using 16 MHz clock
-	// This demonstrates how to use interrupts to implement a simple
-	// inactivity timeout.
-	TCCR0A = 0x00;
-	TCCR0B = 0x05;
-	TIMSK0 = (1<<TOIE0);
-
-	print("starting\n");
 
 	while (1) {
 		for (selector=0; selector<14; selector++) {
@@ -201,17 +152,6 @@ int main(void)
 				usb_keyboard_press(hex_keys[selector],0);
 				usb_keyboard_press(hex_keys[b],0);
 				usb_keyboard_press(KEY_SPACE,0);
-				reset_idle = 1;
-			}
-
-			// if any keypresses were detected, reset the idle counter
-			if (reset_idle) {
-				// variables shared with interrupt routines must be
-				// accessed carefully so the interrupt routine doesn't
-				// try to use the variable in the middle of our access
-				cli();
-				idle_count = 0;
-				sei();
 			}
 
 			b_prev[selector] = b;
@@ -220,23 +160,6 @@ int main(void)
 		
 	}
 }
-
-// This interrupt routine is run approx 61 times per second.
-// A very simple inactivity timeout is implemented, where we
-// will send a space character and print a message to the
-// hid_listen debug message window.
-
-
-ISR(TIMER0_OVF_vect)
-{
-	idle_count++;
-	if (idle_count > 61 * 8) {
-		idle_count = 0;
-		print("Timer Event :)\n");
-		/* LED_OFF; */
-	}
-}
-
 
 /* 
    Local Variables:

@@ -1,0 +1,65 @@
+01 h
+02 u
+04 del
+08 Q
+
+11 j
+12 '
+14 a
+18 [
+
+21 m
+22 ,
+24 z
+28 x
+
+31 j
+32 I
+34 esc
+38 w
+
+41 k
+42 :
+44 s
+48 b
+
+51 n
+52 o
+54 `
+58 e 
+
+61 l
+62 ret
+64 d
+68 t
+
+71 .
+72 /
+74 c
+78 v
+
+81 ]
+82 p
+84 "
+88 r
+
+91 ;
+92 \
+94 f
+98 g
+
+a1 ALT
+a2 BKSP
+a4 CTRL
+a8 TAB
+
+b1 NAS
+b3 CAPS
+b3 NASLK
+b4 SHIFT
+
+c1 SPC
+c2 FN
+c4 RET
+c8 NORM
+

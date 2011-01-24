@@ -38,7 +38,8 @@ uint16_t idle_count=0;
 void init_ports() {
 	/* led PB6-0 PE7 write only, covered below*/
 	/* only using E for writing */
-	DDRE=0xFF;
+	/* DDRE=0xFF; */
+	DDRE=0x81; /* 10000001 */
 	/* only using B for writing */
 	DDRB=0xFF;
 	/* D is mixed 0,1 write, 2,3,4,5 read*/
@@ -112,7 +113,26 @@ int scan_line(uint8_t selector) {
 }
 
 void set_led(uint8_t led) {
-	PORTB=led;
+
+	/*
+	  nas: p0 0e
+	  fun p0 0b
+	  norm p0 0d
+	  game mode p0 07
+
+		DB 00h	;00h not used
+		DB 0Dh	;01h normal mode
+		DB 0Eh	;02h NAS mode
+		DB 0Bh	;03h Function mode
+
+	 */
+	PORTB=(led & 0x7f);
+	/* bit 7 */
+	if (led & (1<<7)) {
+		PORTE |= (1<<7);
+	} else {
+		PORTE &= ~(1<<7);
+	}
 }
 int main(void)
 {
@@ -136,7 +156,7 @@ int main(void)
 	usb_init();
 	while (!usb_configured()) /* wait */ ;
 
-	set_led(0x00);
+	set_led(0x01);
 
 	// Wait an extra second for the PC's operating system to load drivers
 	// and do whatever it does to actually be ready for input
@@ -152,6 +172,7 @@ int main(void)
 				usb_keyboard_press(hex_keys[selector],0);
 				usb_keyboard_press(hex_keys[b],0);
 				usb_keyboard_press(KEY_SPACE,0);
+				/* set_led((selector<<4)+b); */
 			}
 
 			b_prev[selector] = b;

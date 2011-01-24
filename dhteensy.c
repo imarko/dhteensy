@@ -42,11 +42,115 @@
 #define LED_CONFIG	(DDRD |= (1<<6))
 #define CPU_PRESCALE(n)	(CLKPR = 0x80, CLKPR = (n))
 
-uint8_t number_keys[10]=
-	{KEY_0,KEY_1,KEY_2,KEY_3,KEY_4,KEY_5,KEY_6,KEY_7,KEY_8,KEY_9};
+uint8_t hex_keys[16]=
+	{KEY_0,KEY_1,KEY_2,KEY_3,KEY_4,KEY_5,KEY_6,KEY_7,KEY_8,KEY_9,KEY_A,KEY_B,KEY_C,KEY_D,KEY_E,KEY_F};
 
 uint16_t idle_count=0;
 
+void init_ports() {
+	/* led PB6-0 PE7 write only, covered below*/
+	/* only using E for writing */
+	DDRE=0xFF;
+	/* only using B for writing */
+	DDRB=0xFF;
+	/* D is mixed 0,1 write, 2,3,4,5 read*/
+	DDRD=0x03; /* 00000011 */
+
+	/* turn P7 off? */
+	/* DDRC=0xFF; */
+	/* PORTC=0x00; */
+}
+
+
+void set_selector(uint8_t selector) {
+
+	/* selector:
+	   original:
+	   P1 lower 4 bits, 0,1,2,3
+	   pins 1,2,3,4
+	   
+	   teensy:
+	   PE0, PB7, PD0, PD1
+	*/
+
+	/* set port modes */
+
+	/* DDRE |= (1<<0); */
+	/* DDRB |= (1<<7); */
+	/* DDRD |= (1<<0); */
+	/* DDRD |= (1<<1); */
+
+	/* DDRD = 0xFF; */
+	/* PORTD |= (1<<2); */
+	/* PORTD |= (1<<3); */
+	/* PORTD |= (1<<4); */
+	/* PORTD |= (1<<5); */
+
+	/* bit 0 */
+	if (selector & (1<<0)) {
+		PORTE |= (1<<0);
+	} else {
+		PORTE &= ~(1<<0);
+	}
+
+	/* bit 1 */
+	if (selector & (1<<1)) {
+		PORTB |= (1<<7);
+	} else {
+		PORTB &= ~(1<<7);
+	}
+
+	/* bit 2 */
+	if (selector & (1<<2)) {
+		PORTD |= (1<<0);
+	} else {
+		PORTD &= ~(1<<0);
+	}
+
+	/* bit 3 */
+	if (selector & (1<<3)) {
+		PORTD |= (1<<1);
+	} else {
+		PORTD &= ~(1<<1);
+	}
+}
+
+int read_keys() {
+	/* key:
+	   original:
+	   P1 upper 4 bits, 4,5,6,7
+	   pins 5,6,7,8
+	   teensy:
+	   PD2,PD3,PD4,PD5
+	*/
+	uint8_t b;
+
+	/* set port modes */
+
+	/* DDRD &= ~(1<<2); */
+	/* DDRD &= ~(1<<3); */
+	/* DDRD &= ~(1<<4); */
+	/* DDRD &= ~(1<<5); */
+
+	/* DDRD = 0x00; */
+
+	// read all port B pins
+	b = PIND;
+	b &= 0x3C; /* 00111100 */
+	b >>= 2;
+	return(b);
+
+}
+
+int scan_line(uint8_t selector) {
+	set_selector(selector);
+	_delay_us(100);
+	return(read_keys());
+}
+
+void set_led(uint8_t led) {
+	PORTB=led;
+}
 int main(void)
 {
 	uint8_t b, reset_idle, selector;
@@ -56,26 +160,26 @@ int main(void)
 		b_prev[selector]=0;
 	}
 	// set for 16 MHz clock
-	/* CPU_PRESCALE(0); */
+	CPU_PRESCALE(0);
 
-	// Configure all port B and port D pins as inputs with pullup resistors.
-	// See the "Using I/O Pins" page for details.
-	// http://www.pjrc.com/teensy/pins.html
-	DDRB = 0x00;
-	PORTB = 0xFF;
+	// init ports
+	init_ports();
 
 	// Initialize the USB, and then wait for the host to set configuration.
 	// If the Teensy is powered without a PC connected to the USB port,
 	// this will wait forever.
+	/* LED_CONFIG; */
+	/* LED_ON; */
+
 	usb_init();
 	while (!usb_configured()) /* wait */ ;
 
-	LED_CONFIG;
-	LED_ON;
+	/* LED_OFF; */
+	set_led(0x00);
+
 	// Wait an extra second for the PC's operating system to load drivers
 	// and do whatever it does to actually be ready for input
-	_delay_ms(100);
-	LED_OFF;
+	_delay_ms(1000);
 
 	// Configure timer 0 to generate a timer overflow interrupt every
 	// 256*1024 clock cycles, or approx 61 Hz when using 16 MHz clock
@@ -85,29 +189,19 @@ int main(void)
 	TCCR0B = 0x05;
 	TIMSK0 = (1<<TOIE0);
 
-	DDRB = 0xFF;
-	PORTB = 0xF0;
+	print("starting\n");
+
 	while (1) {
 		for (selector=0; selector<14; selector++) {
-			DDRB = 0xFF;
-			PORTB = (selector | 0xF0);
-			DDRB = 0x00;
-			_delay_us(100);
-			// read all port B pins
-			b = PINB;
-			b &= 0xF0;
-			// check if any pins are low, but were high previously
-			reset_idle = 0;
+			b=scan_line(selector);
 
 			if (b_prev[selector] != b) {
-				/* usb_keyboard_press(KEY_B, KEY_SHIFT); */
-				/* print("selector "); */
-				phex((selector << 4) + (b >>4));
-				/* print(" bits "); */
-				/* phex(b); */
-				print("\n");
+				/* phex((selector << 4) + b); */
+				/* print("\n"); */
+				usb_keyboard_press(hex_keys[selector],0);
+				usb_keyboard_press(hex_keys[b],0);
+				usb_keyboard_press(KEY_SPACE,0);
 				reset_idle = 1;
-				/* LED_ON; */
 			}
 
 			// if any keypresses were detected, reset the idle counter
@@ -119,12 +213,11 @@ int main(void)
 				idle_count = 0;
 				sei();
 			}
-			// now the current pins will be the previous, and
-			// wait a short delay so we're not highly sensitive
-			// to mechanical "bounce".
+
 			b_prev[selector] = b;
-			/* _delay_ms(2); */
 		}
+		_delay_ms(10);
+		
 	}
 }
 
@@ -132,13 +225,15 @@ int main(void)
 // A very simple inactivity timeout is implemented, where we
 // will send a space character and print a message to the
 // hid_listen debug message window.
+
+
 ISR(TIMER0_OVF_vect)
 {
 	idle_count++;
 	if (idle_count > 61 * 8) {
 		idle_count = 0;
 		print("Timer Event :)\n");
-		LED_OFF;
+		/* LED_OFF; */
 	}
 }
 

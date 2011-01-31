@@ -2,14 +2,15 @@
 #define KEY_DH_NAS 0xf1
 #define KEY_DH_NASLK 0xf2
 #define KEY_DH_FN 0xf3
+#define KEY_DH_SHIFT 0xf4
+#define KEY_DH_CTRL 0xf5
+#define KEY_DH_ALT 0xf6
 
 
 // maybe change this to DH_SHIFT(key) form
 #define DH_SHIFT 0x80
 
-// TODO figure out how to use PROGMEM
-
-static char normal_keys[]=
+static char PROGMEM normal_keys[]=
 	{ KEY_H, KEY_U, KEY_DELETE, KEY_Q,
 	  KEY_J, KEY_TILDE, KEY_A, KEY_LEFT_BRACE,
 	  KEY_M, KEY_COMMA, KEY_Z, KEY_X,
@@ -20,12 +21,12 @@ static char normal_keys[]=
 	  KEY_PERIOD, KEY_SLASH, KEY_C, KEY_V,
 	  KEY_RIGHT_BRACE, KEY_P, KEY_QUOTE + DH_SHIFT, KEY_R,
 	  KEY_SEMICOLON, KEY_BACKSLASH, KEY_F, KEY_G,
-	  KEY_LEFT_ALT, KEY_BACKSPACE, KEY_LEFT_CTRL, KEY_TAB,
-	  KEY_DH_NAS, KEY_CAPS_LOCK, KEY_DH_NASLK, KEY_LEFT_SHIFT,
+	  KEY_DH_ALT, KEY_BACKSPACE, KEY_DH_CTRL, KEY_TAB,
+	  KEY_DH_NAS, KEY_DH_SHIFT, KEY_DH_NASLK, KEY_DH_SHIFT,
 	  KEY_SPACE, KEY_DH_FN, KEY_ENTER, KEY_DH_NORM,
 };
 
-static char nas_keys[]=
+static char PROGMEM nas_keys[]=
 	{ 
 	  // 6 & del !
 	  KEY_6, KEY_7 + DH_SHIFT, KEY_DELETE, KEY_1 + DH_SHIFT,
@@ -48,12 +49,12 @@ static char nas_keys[]=
 	  // 0 10kon 4 5
 	  KEY_0, KEY_BACKSLASH, KEY_4, KEY_5,
 
-	  KEY_LEFT_ALT, KEY_BACKSPACE, KEY_LEFT_CTRL, KEY_TAB,
-	  KEY_DH_NAS, KEY_CAPS_LOCK, KEY_DH_NASLK, KEY_LEFT_SHIFT,
+	  KEY_DH_ALT, KEY_BACKSPACE, KEY_DH_CTRL, KEY_TAB,
+	  KEY_DH_NAS, KEY_CAPS_LOCK, KEY_DH_NASLK, KEY_DH_SHIFT,
 	  KEY_SPACE, KEY_DH_FN, KEY_ENTER, KEY_DH_NORM,
 };
 
-static char fn_keys[]=
+static char PROGMEM fn_keys[]=
 	{ 
 	  // <- uparrow del f2
 	  KEY_LEFT, KEY_UP, KEY_DELETE, KEY_F2,
@@ -76,7 +77,7 @@ static char fn_keys[]=
 	  //  pause f12 home arrright
 	  KEY_PAUSE, KEY_F12, KEY_HOME, KEY_RIGHT,
 
-	  KEY_LEFT_ALT, KEY_BACKSPACE, KEY_LEFT_CTRL, KEY_TAB,
-	  KEY_DH_NAS, KEY_CAPS_LOCK, KEY_DH_NASLK, KEY_LEFT_SHIFT,
+	  KEY_DH_ALT, KEY_BACKSPACE, KEY_DH_CTRL, KEY_TAB,
+	  KEY_DH_NAS, KEY_CAPS_LOCK, KEY_DH_NASLK, KEY_DH_SHIFT,
 	  KEY_SPACE, KEY_DH_FN, KEY_ENTER, KEY_DH_NORM,
 };

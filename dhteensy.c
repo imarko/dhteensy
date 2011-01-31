@@ -161,7 +161,7 @@ uint8_t process_keys(void) {
 	// first pass for special keys
 	for (i=0; i<keys_down_n; i++) {
 		k = keys_down[i];
-		switch(normal_keys[k]) {
+		switch(pgm_read_byte(normal_keys+k)) {
 		case KEY_DH_NORM:
 			mode=MODE_NORMAL;
 			break;
@@ -170,6 +170,15 @@ uint8_t process_keys(void) {
 			break;
 		case KEY_DH_FN:
 			mode=MODE_FN;
+			break;
+		case KEY_DH_SHIFT:
+			dh_keyboard_modifier_keys |= KEY_SHIFT;
+			break;
+		case KEY_DH_CTRL:
+			dh_keyboard_modifier_keys |= KEY_CTRL;
+			break;
+		case KEY_DH_ALT:
+			dh_keyboard_modifier_keys |= KEY_ALT;
 			break;
 		}
 	}
@@ -180,13 +189,13 @@ uint8_t process_keys(void) {
 		k=keys_down[i];
 		switch(mode) {
 		case MODE_NORMAL:
-			keycode = normal_keys[k];
+			keycode = pgm_read_byte(normal_keys+k);
 			break;
 		case MODE_NAS:
-			keycode = nas_keys[k];
+			keycode = pgm_read_byte(nas_keys+k);
 			break;
 		case MODE_FN:
-			keycode = fn_keys[k];
+			keycode = pgm_read_byte(fn_keys+k);
 			break;
 		}
 		if (keycode>=0xF0) break; // special, already handled

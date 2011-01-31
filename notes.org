@@ -1,0 +1,27 @@
+* key representation:
+ - KEY_3+0x80 if shift. Any other modifiers used by combos?
+   Key codes go up to 99 so high bit can be used
+   special keys: 0xff, 0xfe, etc?
+             Aka 0x7f + 0x80
+   use 0x70 to 0x7f perhaps (112-127) (+0x80 high bit)
+
+* building keyboard_modifier_keys and keyboard_keys
+ - zero out k_m_k and k_k
+ - scan keyboard to find all keys currently down
+ - walk through each pressed key:
+   - look up key code and modifier code for key according to current
+     mode
+   - if key is 0xff etc then it's a special key, handle it
+   - otherwise:
+     - if key's high bit is on turn on shift in k_m_k
+     - append key code to k_k
+     - if we already have 6 keys break out of the loop, don't check for
+       more
+       - maybe do "phantom condition" by setting all of k_k to 0x01's
+ - at the end of the loop |= state based modifier to k_m_k
+ - call usb_keyboard_send
+
+ - k_k and k_m_k might be sent out from irq if a get report request
+   comes in. Maybe update it only in cli()?
+
+* special key combo to call reload()

@@ -28,14 +28,30 @@
 #include "usb_keyboard_debug.h"
 #include "print.h"
 
+#include "keymaps.h"
+
 #define CPU_PRESCALE(n)	(CLKPR = 0x80, CLKPR = (n))
 
 uint8_t hex_keys[16]=
 	{KEY_0,KEY_1,KEY_2,KEY_3,KEY_4,KEY_5,KEY_6,KEY_7,KEY_8,KEY_9,KEY_A,KEY_B,KEY_C,KEY_D,KEY_E,KEY_F};
 
+
+#define MODE_NORMAL 0
+#define MODE_NAS 1
+#define MODE_FN 2
+
+
 uint16_t idle_count=0;
 
-void init_ports() {
+uint8_t mode;
+
+// duplicated this so that we can safely change it without worrying about interrupts
+uint8_t keys_down[16];
+uint8_t keys_down_n;
+
+
+
+void init_ports(void) {
 	/* led PB6-0 PE7 write only, covered below*/
 	/* only using E for writing */
 	/* DDRE=0xFF; */
@@ -87,7 +103,7 @@ void set_selector(uint8_t selector) {
 	}
 }
 
-int read_keys() {
+int read_keys(void) {
 	/* key:
 	   original:
 	   P1 upper 4 bits, 4,5,6,7
@@ -120,12 +136,12 @@ void set_led(uint8_t led) {
 	  norm p0 0d
 	  game mode p0 07
 
-		DB 00h	;00h not used
-		DB 0Dh	;01h normal mode
-		DB 0Eh	;02h NAS mode
-		DB 0Bh	;03h Function mode
+	  DB 00h	;00h not used
+	  DB 0Dh	;01h normal mode
+	  DB 0Eh	;02h NAS mode
+	  DB 0Bh	;03h Function mode
 
-	 */
+	*/
 	PORTB=(led & 0x7f);
 	/* bit 7 */
 	if (led & (1<<7)) {
@@ -134,17 +150,92 @@ void set_led(uint8_t led) {
 		PORTE &= ~(1<<7);
 	}
 }
+
+uint8_t process_keys(void) {
+
+	uint8_t k, i, changed,keycode=0,nkeys=0;
+	uint8_t dh_keyboard_modifier_keys=0;
+	uint8_t dh_keyboard_keys[6]={0,0,0,0,0,0};
+
+	
+	// first pass for special keys
+	for (i=0; i<keys_down_n; i++) {
+		k = keys_down[i];
+		switch(normal_keys[k]) {
+		case KEY_DH_NORM:
+			mode=MODE_NORMAL;
+			break;
+		case KEY_DH_NAS:
+			mode=MODE_NAS;
+			break;
+		case KEY_DH_FN:
+			mode=MODE_FN;
+			break;
+		}
+	}
+
+	// second pass for the rest
+
+	for (i=0; i<keys_down_n; i++) {
+		k=keys_down[i];
+		switch(mode) {
+		case MODE_NORMAL:
+			keycode = normal_keys[k];
+			break;
+		case MODE_NAS:
+			keycode = nas_keys[k];
+			break;
+		case MODE_FN:
+			keycode = fn_keys[k];
+			break;
+		}
+		if (keycode>=0xF0) break; // special, already handled
+
+		// high bit set means shifted
+		if ((keycode & (1<<7)))
+			dh_keyboard_modifier_keys |= KEY_SHIFT;
+
+		keycode &= 0x7f; // zero high bit
+
+		if(nkeys>5) break;
+		dh_keyboard_keys[nkeys]=keycode;
+		nkeys++;
+	}
+
+	for (i=0; i<6; i++) {
+		if (dh_keyboard_keys[i] != keyboard_keys[i]) {
+			changed=1;
+			keyboard_keys[i]=dh_keyboard_keys[i];
+		}
+	}
+	if (dh_keyboard_modifier_keys !=  keyboard_modifier_keys) {
+		changed=1;
+		keyboard_modifier_keys=dh_keyboard_modifier_keys;
+	}
+	if (changed)
+		return usb_keyboard_send();
+	else
+		return 0;
+	
+
+}
+
+uint8_t key_down(uint8_t key) {
+	if(keys_down_n>=15) 
+		return -1;
+	keys_down[keys_down_n]=key;
+	keys_down_n++;
+	return 0;
+}
+
+
 int main(void)
 {
-	uint8_t b, reset_idle, selector;
-	uint8_t b_prev[16];
+	uint8_t i, b, selector;
 
 	// set for 16 MHz clock
 	CPU_PRESCALE(0);
 
-	for (selector=0; selector<14; selector++) {
-		b_prev[selector]=0;
-	}
 
 	// init ports
 	init_ports();
@@ -163,20 +254,22 @@ int main(void)
 	_delay_ms(1000);
 
 	while (1) {
+
+		mode=MODE_NORMAL;
+
+		// zero out dh kbd buffer
+		for (i=0; i<16; i++) {
+			keys_down[i]=0;
+		}
+		keys_down_n=0;
+
 		for (selector=0; selector<14; selector++) {
 			b=scan_line(selector);
-
-			if (b_prev[selector] != b) {
-				/* phex((selector << 4) + b); */
-				/* print("\n"); */
-				usb_keyboard_press(hex_keys[selector],0);
-				usb_keyboard_press(hex_keys[b],0);
-				usb_keyboard_press(KEY_SPACE,0);
-				/* set_led((selector<<4)+b); */
-			}
-
-			b_prev[selector] = b;
+			for(i=0;i<4; i++) 
+				if(b & (1<<i))
+					key_down((selector << 2) +i);
 		}
+		process_keys();
 		_delay_ms(10);
 		
 	}

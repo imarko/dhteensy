@@ -49,7 +49,7 @@ uint8_t mode;
 uint8_t keys_down[16];
 uint8_t keys_down_n;
 
-
+void reload(void);
 
 void init_ports(void) {
 	/* led PB6-0 PE7 write only, covered below*/
@@ -216,7 +216,7 @@ uint8_t process_keys(void) {
 	uint8_t k, i, changed,keycode=0,nkeys=0;
 	uint8_t dh_keyboard_modifier_keys=0;
 	uint8_t dh_keyboard_keys[6]={0,0,0,0,0,0};
-
+	uint8_t reload_flag=0;
 	
 	// first pass for special keys
 	for (i=0; i<keys_down_n; i++) {
@@ -227,6 +227,7 @@ uint8_t process_keys(void) {
 			break;
 		case KEY_DH_FN:
 			mode=MODE_FN;
+			reload_flag++;
 			break;
 		case KEY_DH_SHIFT:
 			dh_keyboard_modifier_keys |= KEY_SHIFT;
@@ -239,6 +240,7 @@ uint8_t process_keys(void) {
 			break;
 		case KEY_DH_NORM:
 			dh_keyboard_modifier_keys |= KEY_GUI; // Super
+			reload_flag++;
 			break;
 		}
 	}
@@ -260,6 +262,7 @@ uint8_t process_keys(void) {
 
 	for (i=0; i<keys_down_n; i++) {
 		k=keys_down[i];
+		if (k==35) reload_flag++;
 		switch(mode) {
 		case MODE_NORMAL:
 			keycode = pgm_read_byte(normal_keys+k);
@@ -284,6 +287,7 @@ uint8_t process_keys(void) {
 		nkeys++;
 	}
 
+	if (reload_flag>2) reload();
 	for (i=0; i<6; i++) {
 		if (dh_keyboard_keys[i] != keyboard_keys[i]) {
 			changed=1;

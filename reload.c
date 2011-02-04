@@ -1,4 +1,8 @@
-void reload() 
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <util/delay.h>
+
+void reload(void) 
 {
 	cli();
 	// disable watchdog, if enabled

@@ -45,7 +45,7 @@ TARGET = dhteensy
 
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC =	$(TARGET).c \
+SRC =	$(TARGET).c reload.c \
 	usb_keyboard_debug.c \
 	print.c
 

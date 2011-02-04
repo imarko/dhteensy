@@ -32,8 +32,8 @@ static char PROGMEM nas_keys[]=
 	  KEY_6, KEY_7 + DH_SHIFT, KEY_DELETE, KEY_1 + DH_SHIFT,
 	  // 7 _ 1 ~
 	  KEY_7, KEY_MINUS + DH_SHIFT, KEY_1, KEY_TILDE + DH_SHIFT,
-	  // + , = 0
-	  KEY_EQUAL + DH_SHIFT, KEY_COMMA, KEY_EQUAL, KEY_0,
+	  // + , = x
+	  KEY_EQUAL + DH_SHIFT, KEY_COMMA, KEY_EQUAL, KEY_X,
 	  // ( 9 esc @
 	  KEY_9 + DH_SHIFT, KEY_9, KEY_ESC, KEY_2 + DH_SHIFT,
 	  // 8 : 3 numlk

@@ -60,6 +60,15 @@ void init_ports(void) {
 	DDRB=0xFF;
 	/* D is mixed 0,1 write, 2,3,4,5 read*/
 	DDRD=0x03; /* 00000011 */
+
+
+	/* // ground maybe? */
+	/* DDRC=0xFF; */
+	/* PORTC=0x00; */
+
+	/* // led? */
+	/* DDRB=0xFF; */
+	/* PORTB=0x00; */
 }
 
 
@@ -137,12 +146,63 @@ void set_led(uint8_t led) {
 	  game mode p0 07
 
 	  DB 00h	;00h not used
-	  DB 0Dh	;01h normal mode
-	  DB 0Eh	;02h NAS mode
-	  DB 0Bh	;03h Function mode
+	  DB 0Dh	;01h normal mode   1101
+	  DB 0Eh	;02h NAS mode      1110
+	  DB 0Bh	;03h Function mode 1011
 
 	*/
-	PORTB=(led & 0x7f);
+	//	PORTB=(led & 0x7f);
+
+	/* bit 0 */
+	if (led & (1<<0)) {
+		PORTB |= (1<<6);
+	} else {
+		PORTB &= ~(1<<6);
+	}
+
+	/* bit 1 */
+	if (led & (1<<1)) {
+		PORTB |= (1<<5);
+	} else {
+		PORTB &= ~(1<<5);
+	}
+
+	/* bit 2 */
+	if (led & (1<<2)) {
+		PORTB |= (1<<4);
+	} else {
+		PORTB &= ~(1<<4);
+	}
+
+	/* bit 3 */
+	if (led & (1<<3)) {
+		PORTB |= (1<<3);
+	} else {
+		PORTB &= ~(1<<3);
+	}
+
+	/* bit 4 */
+	if (led & (1<<4)) {
+		PORTB |= (1<<2);
+	} else {
+		PORTB &= ~(1<<2);
+	}
+
+	/* bit 5 */
+	if (led & (1<<5)) {
+		PORTB |= (1<<1);
+	} else {
+		PORTB &= ~(1<<1);
+	}
+
+	/* bit 6 */
+	if (led & (1<<6)) {
+		PORTB |= (1<<0);
+	} else {
+		PORTB &= ~(1<<0);
+	}
+
+
 	/* bit 7 */
 	if (led & (1<<7)) {
 		PORTE |= (1<<7);
@@ -162,9 +222,6 @@ uint8_t process_keys(void) {
 	for (i=0; i<keys_down_n; i++) {
 		k = keys_down[i];
 		switch(pgm_read_byte(normal_keys+k)) {
-		case KEY_DH_NORM:
-			mode=MODE_NORMAL;
-			break;
 		case KEY_DH_NAS:
 			mode=MODE_NAS;
 			break;
@@ -180,7 +237,23 @@ uint8_t process_keys(void) {
 		case KEY_DH_ALT:
 			dh_keyboard_modifier_keys |= KEY_ALT;
 			break;
+		case KEY_DH_NORM:
+			dh_keyboard_modifier_keys |= KEY_GUI; // Super
+			break;
 		}
+	}
+
+	// set mode LEDs
+	switch(mode) {
+	case MODE_NORMAL:
+		set_led(0xFD); // normal
+		break;
+	case MODE_NAS:
+		set_led(0x0E); // NAS
+		break;
+	case MODE_FN:
+		set_led(0x0B); // FN
+		break;
 	}
 
 	// second pass for the rest
@@ -256,7 +329,8 @@ int main(void)
 	usb_init();
 	while (!usb_configured()) /* wait */ ;
 
-	set_led(0x01);
+	set_led(0xFD); // normal
+
 
 	// Wait an extra second for the PC's operating system to load drivers
 	// and do whatever it does to actually be ready for input

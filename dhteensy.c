@@ -248,7 +248,7 @@ uint8_t process_keys(void) {
 	// set mode LEDs
 	switch(mode) {
 	case MODE_NORMAL:
-		set_led(0xFD); // normal
+		set_led(0x0D); // normal
 		break;
 	case MODE_NAS:
 		set_led(0x0E); // NAS

@@ -12,7 +12,7 @@
 
 static char PROGMEM normal_keys[]=
 	{ KEY_H, KEY_U, KEY_DELETE, KEY_Q,
-	  KEY_J, KEY_TILDE, KEY_A, KEY_LEFT_BRACE,
+	  KEY_J, KEY_QUOTE, KEY_A, KEY_LEFT_BRACE,
 	  KEY_M, KEY_COMMA, KEY_Z, KEY_X,
 	  KEY_Y, KEY_I, KEY_ESC, KEY_W,
 	  KEY_K, KEY_SEMICOLON, KEY_S, KEY_B,
@@ -34,10 +34,10 @@ static char PROGMEM nas_keys[]=
 	  KEY_7, KEY_MINUS + DH_SHIFT, KEY_1, KEY_TILDE + DH_SHIFT,
 	  // + , = x
 	  KEY_EQUAL + DH_SHIFT, KEY_COMMA, KEY_EQUAL, KEY_X,
-	  // ( 9 esc @
-	  KEY_9 + DH_SHIFT, KEY_9, KEY_ESC, KEY_2 + DH_SHIFT,
+	  // ( * esc @
+	  KEY_9 + DH_SHIFT, KEY_8 + DH_SHIFT, KEY_ESC, KEY_2 + DH_SHIFT,
 	  // 8 : 3 numlk
-	  KEY_8, KEY_SEMICOLON + DH_SHIFT, KEY_3, KEY_B,
+	  KEY_8, KEY_SEMICOLON + DH_SHIFT, KEY_2, KEY_B,
 	  // ; ( < #
 	  KEY_SEMICOLON, KEY_9 + DH_SHIFT, KEY_COMMA + DH_SHIFT, KEY_3 + DH_SHIFT,
 	  // 9 ent 3 >

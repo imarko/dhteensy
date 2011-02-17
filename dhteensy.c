@@ -30,18 +30,14 @@
 
 #include "keymaps.h"
 
-#define DEBUG 1
-
 #define CPU_PRESCALE(n)	(CLKPR = 0x80, CLKPR = (n))
 
 uint8_t hex_keys[16]=
 	{KEY_0,KEY_1,KEY_2,KEY_3,KEY_4,KEY_5,KEY_6,KEY_7,KEY_8,KEY_9,KEY_A,KEY_B,KEY_C,KEY_D,KEY_E,KEY_F};
 
-
 #define MODE_NORMAL 0
 #define MODE_NAS 1
 #define MODE_FN 2
-
 
 uint16_t idle_count=0;
 
@@ -61,7 +57,6 @@ void init_ports(void) {
 	/* D is mixed 0,1 write, 2,3,4,5 read*/
 	DDRD=0x03; /* 00000011 */
 
-
 	/* // ground maybe? */
 	/* DDRC=0xFF; */
 	/* PORTC=0x00; */
@@ -70,7 +65,6 @@ void init_ports(void) {
 	/* DDRB=0xFF; */
 	/* PORTB=0x00; */
 }
-
 
 void set_selector(uint8_t selector) {
 
@@ -128,7 +122,6 @@ int read_keys(void) {
 	b &= 0x3C; /* 00111100 */
 	b >>= 2;
 	return(b);
-
 }
 
 int scan_line(uint8_t selector) {
@@ -202,7 +195,6 @@ void set_led(uint8_t led) {
 		PORTB &= ~(1<<0);
 	}
 
-
 	/* bit 7 */
 	if (led & (1<<7)) {
 		PORTE |= (1<<7);
@@ -218,8 +210,6 @@ uint8_t process_keys(void) {
 	uint8_t dh_keyboard_keys[6]={0,0,0,0,0,0};
 	uint8_t reload_flag=0;
 	uint8_t mode=MODE_NORMAL;
-
-
 	
 	// first pass for special keys
 	for (i=0; i<keys_down_n; i++) {
@@ -292,6 +282,7 @@ uint8_t process_keys(void) {
 	}
 
 	if (reload_flag>2) reload();
+
 	for (i=0; i<6; i++) {
 		if (dh_keyboard_keys[i] != keyboard_keys[i]) {
 			changed=1;
@@ -302,27 +293,11 @@ uint8_t process_keys(void) {
 		changed=1;
 		keyboard_modifier_keys=dh_keyboard_modifier_keys;
 	}
-	if (changed) {
-#ifdef DEBUG
-		print("mod: ");
-		phex(keyboard_modifier_keys);
-		print(" buffer: ");
-		for(i=0;i<6;i++) {
-			phex(keyboard_keys[i]);
-			print(" down: ");
-		}
-		for (i=0; i<keys_down_n; i++) {
-			phex(keys_down[i]);
-			print(" ");
-		}
-		print("\n");
-#endif
+	if (changed)
 		return usb_keyboard_send();
-	}
+
 	else
 		return 0;
-	
-
 }
 
 uint8_t key_down(uint8_t key) {
@@ -333,17 +308,12 @@ uint8_t key_down(uint8_t key) {
 	return 0;
 }
 
-
 int main(void)
 {
 	uint8_t i, b, selector;
-#ifdef DEBUG2
-	uint8_t lastk[14] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-#endif
 
 	// set for 16 MHz clock
 	CPU_PRESCALE(0);
-
 
 	// init ports
 	init_ports();
@@ -356,7 +326,6 @@ int main(void)
 	while (!usb_configured()) /* wait */ ;
 
 	set_led(0xFD); // normal
-
 
 	// Wait an extra second for the PC's operating system to load drivers
 	// and do whatever it does to actually be ready for input
@@ -371,23 +340,12 @@ int main(void)
 
 		for (selector=0; selector<14; selector++) {
 			b=scan_line(selector);
-#ifdef DEBUG2
-			if (b != lastk[selector]) {
-				phex(selector);
-				print("/");
-				phex(b);
-				print(" ");
-				lastk[selector]=b;
-			}
-			
-#endif
 			for(i=0;i<4; i++) 
 				if(b & (1<<i))
 					key_down((selector << 2) +i);
 		}
 		process_keys();
 		_delay_ms(10);
-		
 	}
 }
 

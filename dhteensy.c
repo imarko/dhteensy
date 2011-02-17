@@ -30,6 +30,8 @@
 
 #include "keymaps.h"
 
+#define DEBUG 1
+
 #define CPU_PRESCALE(n)	(CLKPR = 0x80, CLKPR = (n))
 
 uint8_t hex_keys[16]=
@@ -42,8 +44,6 @@ uint8_t hex_keys[16]=
 
 
 uint16_t idle_count=0;
-
-uint8_t mode;
 
 // duplicated this so that we can safely change it without worrying about interrupts
 uint8_t keys_down[16];
@@ -213,10 +213,13 @@ void set_led(uint8_t led) {
 
 uint8_t process_keys(void) {
 
-	uint8_t k, i, changed,keycode=0,nkeys=0;
+	uint8_t k, i, changed=0,keycode=0,nkeys=0;
 	uint8_t dh_keyboard_modifier_keys=0;
 	uint8_t dh_keyboard_keys[6]={0,0,0,0,0,0};
 	uint8_t reload_flag=0;
+	uint8_t mode=MODE_NORMAL;
+
+
 	
 	// first pass for special keys
 	for (i=0; i<keys_down_n; i++) {
@@ -261,6 +264,7 @@ uint8_t process_keys(void) {
 	// second pass for the rest
 
 	for (i=0; i<keys_down_n; i++) {
+		keycode=0;
 		k=keys_down[i];
 		if (k==35) reload_flag++;
 		switch(mode) {
@@ -274,7 +278,7 @@ uint8_t process_keys(void) {
 			keycode = pgm_read_byte(fn_keys+k);
 			break;
 		}
-		if (keycode>=0xF0) break; // special, already handled
+		if (keycode>=0xF0) continue; // special, already handled
 
 		// high bit set means shifted
 		if ((keycode & (1<<7)))
@@ -298,8 +302,23 @@ uint8_t process_keys(void) {
 		changed=1;
 		keyboard_modifier_keys=dh_keyboard_modifier_keys;
 	}
-	if (changed)
+	if (changed) {
+#ifdef DEBUG
+		print("mod: ");
+		phex(keyboard_modifier_keys);
+		print(" buffer: ");
+		for(i=0;i<6;i++) {
+			phex(keyboard_keys[i]);
+			print(" down: ");
+		}
+		for (i=0; i<keys_down_n; i++) {
+			phex(keys_down[i]);
+			print(" ");
+		}
+		print("\n");
+#endif
 		return usb_keyboard_send();
+	}
 	else
 		return 0;
 	
@@ -318,6 +337,9 @@ uint8_t key_down(uint8_t key) {
 int main(void)
 {
 	uint8_t i, b, selector;
+#ifdef DEBUG2
+	uint8_t lastk[14] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+#endif
 
 	// set for 16 MHz clock
 	CPU_PRESCALE(0);
@@ -341,9 +363,6 @@ int main(void)
 	_delay_ms(1000);
 
 	while (1) {
-
-		mode=MODE_NORMAL;
-
 		// zero out dh kbd buffer
 		for (i=0; i<16; i++) {
 			keys_down[i]=0;
@@ -352,6 +371,16 @@ int main(void)
 
 		for (selector=0; selector<14; selector++) {
 			b=scan_line(selector);
+#ifdef DEBUG2
+			if (b != lastk[selector]) {
+				phex(selector);
+				print("/");
+				phex(b);
+				print(" ");
+				lastk[selector]=b;
+			}
+			
+#endif
 			for(i=0;i<4; i++) 
 				if(b & (1<<i))
 					key_down((selector << 2) +i);

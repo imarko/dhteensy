@@ -11,13 +11,13 @@
 #define DH_SHIFT 0x80
 
 static char PROGMEM normal_keys[]=
-	{ KEY_H, KEY_U, KEY_DELETE, KEY_Q,
+	{ KEY_H, KEY_U, KEY_ESC, KEY_DELETE,
 	  KEY_J, KEY_QUOTE, KEY_A, KEY_LEFT_BRACE,
 	  KEY_M, KEY_COMMA, KEY_Z, KEY_X,
-	  KEY_Y, KEY_I, KEY_ESC, KEY_W,
+	  KEY_Y, KEY_I, KEY_Q, KEY_W,
 	  KEY_K, KEY_SEMICOLON, KEY_S, KEY_B,
 	  KEY_N, KEY_O, KEY_TILDE, KEY_E,
-	  KEY_L, KEYPAD_ENTER, KEY_D, KEY_T,
+	  KEY_L, KEY_P, KEY_D, KEY_T,
 	  KEY_PERIOD, KEY_SLASH, KEY_C, KEY_V,
 	  KEY_RIGHT_BRACE, KEY_P, KEY_QUOTE + DH_SHIFT, KEY_R,
 	  KEY_SEMICOLON, KEY_BACKSLASH, KEY_F, KEY_G,
@@ -41,7 +41,7 @@ static char PROGMEM nas_keys[]=
 	  // ; ( < #
 	  KEY_SEMICOLON, KEY_9 + DH_SHIFT, KEY_COMMA + DH_SHIFT, KEY_3 + DH_SHIFT,
 	  // 9 ent 3 >
-	  KEY_9, KEYPAD_ENTER, KEY_3, KEY_PERIOD + DH_SHIFT,
+	  KEY_9, KEY_P, KEY_3, KEY_PERIOD + DH_SHIFT,
 	  // . ? % -
 	  KEY_PERIOD, KEY_SLASH + DH_SHIFT, KEY_5 + DH_SHIFT, KEY_MINUS,
 	  // 10off ) / $
@@ -69,7 +69,7 @@ static char PROGMEM fn_keys[]=
 	  // ins f10 = f6
 	  KEY_INSERT, KEY_F10, KEY_EQUAL, KEY_F6,
 	  // print ent mouseon ent
-	  KEY_PRINTSCREEN, KEYPAD_ENTER, KEY_D, KEY_ENTER,
+	  KEY_PRINTSCREEN, KEY_P, KEY_D, KEY_ENTER,
 	  // f9 pgdn f5 downarr
 	  KEY_F9, KEY_PAGE_DOWN, KEY_F5, KEY_DOWN,
 	  // f11 pgup arrleft arrup

@@ -44,6 +44,7 @@ uint16_t idle_count=0;
 // duplicated this so that we can safely change it without worrying about interrupts
 uint8_t keys_down[16];
 uint8_t keys_down_n;
+int lastsum;
 
 void reload(void);
 
@@ -205,16 +206,25 @@ void set_led(uint8_t led) {
 
 uint8_t process_keys(void) {
 
-	uint8_t k, i, changed=0,keycode=0,nkeys=0;
+	uint8_t k, i, keycode=0,nkeys=0;
 	uint8_t dh_keyboard_modifier_keys=0;
 	uint8_t dh_keyboard_keys[6]={0,0,0,0,0,0};
 	uint8_t reload_flag=0;
 	uint8_t mode=MODE_NORMAL;
+	int sum=0;
 	
 	// first pass for special keys
 	for (i=0; i<keys_down_n; i++) {
 		k = keys_down[i];
-		switch(pgm_read_byte(normal_keys+k)) {
+		keycode=pgm_read_byte(normal_keys+k);
+
+		// this is an ugly hack to avoid sending new events if
+		// the only thing that has changed is the FN or NAS state
+
+		if (keycode != KEY_DH_FN && keycode != KEY_DH_NAS)
+			sum += keycode;
+
+		switch(keycode) {
 		case KEY_DH_NAS:
 			mode=MODE_NAS;
 			break;
@@ -232,11 +242,15 @@ uint8_t process_keys(void) {
 			dh_keyboard_modifier_keys |= KEY_ALT;
 			break;
 		case KEY_DH_NORM:
-			dh_keyboard_modifier_keys |= KEY_GUI; // Super
+			//dh_keyboard_modifier_keys |= KEY_GUI; // Super
 			reload_flag++;
 			break;
 		}
 	}
+
+	if (sum == lastsum) // return if nothing has changed
+		return 0;
+	lastsum=sum;
 
 	// set mode LEDs
 	switch(mode) {
@@ -268,6 +282,8 @@ uint8_t process_keys(void) {
 			keycode = pgm_read_byte(fn_keys+k);
 			break;
 		}
+
+
 		if (keycode>=0xF0) continue; // special, already handled
 
 		// high bit set means shifted
@@ -284,20 +300,10 @@ uint8_t process_keys(void) {
 	if (reload_flag>2) reload();
 
 	for (i=0; i<6; i++) {
-		if (dh_keyboard_keys[i] != keyboard_keys[i]) {
-			changed=1;
-			keyboard_keys[i]=dh_keyboard_keys[i];
-		}
+		keyboard_keys[i]=dh_keyboard_keys[i];
 	}
-	if (dh_keyboard_modifier_keys !=  keyboard_modifier_keys) {
-		changed=1;
-		keyboard_modifier_keys=dh_keyboard_modifier_keys;
-	}
-	if (changed)
-		return usb_keyboard_send();
-
-	else
-		return 0;
+	keyboard_modifier_keys=dh_keyboard_modifier_keys;
+	return usb_keyboard_send();
 }
 
 uint8_t key_down(uint8_t key) {

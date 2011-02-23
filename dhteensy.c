@@ -248,10 +248,6 @@ uint8_t process_keys(void) {
 		}
 	}
 
-	if (sum == lastsum) // return if nothing has changed
-		return 0;
-	lastsum=sum;
-
 	// set mode LEDs
 	switch(mode) {
 	case MODE_NORMAL:
@@ -264,6 +260,10 @@ uint8_t process_keys(void) {
 		set_led(0x0B); // FN
 		break;
 	}
+
+	if (sum == lastsum) // return if nothing has changed
+		return 0;
+	lastsum=sum;
 
 	// second pass for the rest
 

@@ -35,7 +35,7 @@ static char PROGMEM nas_keys[]=
 	  // + , = x
 	  KEY_EQUAL + DH_SHIFT, KEY_COMMA, KEY_EQUAL, KEY_X,
 	  // ( * esc @
-	  KEY_9 + DH_SHIFT, KEY_8 + DH_SHIFT, KEY_ESC, KEY_2 + DH_SHIFT,
+	  KEY_6 + DH_SHIFT, KEY_8 + DH_SHIFT, KEY_ESC, KEY_2 + DH_SHIFT,
 	  // 8 : 3 numlk
 	  KEY_8, KEY_SEMICOLON + DH_SHIFT, KEY_2, KEY_B,
 	  // ; ( < #

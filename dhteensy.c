@@ -242,7 +242,7 @@ uint8_t process_keys(void) {
 			dh_keyboard_modifier_keys |= KEY_ALT;
 			break;
 		case KEY_DH_NORM:
-			//dh_keyboard_modifier_keys |= KEY_GUI; // Super
+			dh_keyboard_modifier_keys |= KEY_GUI; // Super
 			reload_flag++;
 			break;
 		}

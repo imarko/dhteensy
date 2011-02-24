@@ -210,6 +210,7 @@ uint8_t process_keys(void) {
 	uint8_t dh_keyboard_modifier_keys=0;
 	uint8_t dh_keyboard_keys[6]={0,0,0,0,0,0};
 	uint8_t reload_flag=0;
+	int8_t shift_count=0;
 	uint8_t mode=MODE_NORMAL;
 	int sum=0;
 	
@@ -287,8 +288,11 @@ uint8_t process_keys(void) {
 		if (keycode>=0xF0) continue; // special, already handled
 
 		// high bit set means shifted
+		// keep a count of auto-shifted vs unshifted keys
 		if ((keycode & (1<<7)))
-			dh_keyboard_modifier_keys |= KEY_SHIFT;
+			shift_count++;
+		else
+			shift_count--;
 
 		keycode &= 0x7f; // zero high bit
 
@@ -298,6 +302,10 @@ uint8_t process_keys(void) {
 	}
 
 	if (reload_flag>2) reload();
+
+	// if there are more auto-shifted keys held down then turn on shift
+	if (shift_count>0)
+		dh_keyboard_modifier_keys |= KEY_SHIFT;
 
 	for (i=0; i<6; i++) {
 		keyboard_keys[i]=dh_keyboard_keys[i];

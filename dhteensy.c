@@ -45,6 +45,9 @@ uint16_t idle_count=0;
 uint8_t keys_down[16];
 uint8_t keys_down_n;
 int lastsum;
+#define MODE_TRACK_MAX 16
+uint8_t mode_track_last[MODE_TRACK_MAX];
+uint8_t mode_track_last_n=0;
 
 void reload(void);
 
@@ -213,8 +216,12 @@ uint8_t process_keys(void) {
 	int8_t auto_shift=0;
 	int8_t no_auto_shift=0;
 	uint8_t mode=MODE_NORMAL;
+	uint8_t kmode;
 	int sum=0;
+	uint8_t mode_track_n=0;
+	uint8_t mode_track[MODE_TRACK_MAX];
 	
+
 	// first pass for special keys
 	for (i=0; i<keys_down_n; i++) {
 		k = keys_down[i];
@@ -273,7 +280,17 @@ uint8_t process_keys(void) {
 		keycode=0;
 		k=keys_down[i];
 		if (k==35) reload_flag++;
-		switch(mode) {
+
+		kmode=mode;
+		for (uint8_t j=0;j<mode_track_last_n;j++) {
+			if (k == (mode_track_last[j] & 0x3F)) { // lower 6 bits
+				kmode=(mode_track_last[j] >> 6); // if key was down previously use its original mode
+			}
+		}
+
+		mode_track[mode_track_n++]=(kmode<<6)+k; // record current mode
+
+		switch(kmode) {
 		case MODE_NORMAL:
 			keycode = pgm_read_byte(normal_keys+k);
 			break;
@@ -303,6 +320,11 @@ uint8_t process_keys(void) {
 	}
 
 	if (reload_flag>2) reload();
+
+	for (i=0;i<mode_track_n;i++) {
+		mode_track_last[i]=mode_track[i];
+	}
+	mode_track_last_n = mode_track_n;
 
 	// we have some auto-shift keys down
 	if (auto_shift>0) {
@@ -350,6 +372,11 @@ int main(void)
 	// and do whatever it does to actually be ready for input
 	_delay_ms(1000);
 
+	/*
+	for (i=0; i<MODE_TRACK_MAX; i++) {
+		mode_track_last[i]=0;
+	}
+	*/
 	while (1) {
 		// zero out dh kbd buffer
 		for (i=0; i<16; i++) {

@@ -10,7 +10,7 @@
 // maybe change this to DH_SHIFT(key) form
 #define DH_SHIFT 0x80
 
-static char PROGMEM normal_keys[]=
+const char PROGMEM normal_keys[]=
 	{ KEY_H, KEY_U, KEY_ESC, KEY_DELETE,
 	  KEY_J, KEY_QUOTE, KEY_A, KEY_LEFT_BRACE,
 	  KEY_M, KEY_COMMA, KEY_Z, KEY_X,
@@ -26,7 +26,7 @@ static char PROGMEM normal_keys[]=
 	  KEY_SPACE, KEY_DH_FN, KEY_ENTER, KEY_DH_NORM,
 };
 
-static char PROGMEM nas_keys[]=
+const char PROGMEM nas_keys[]=
 	{ 
 	  // 6 & del !
 	  KEY_6, KEY_7 + DH_SHIFT, KEY_DELETE, KEY_1 + DH_SHIFT,
@@ -54,7 +54,7 @@ static char PROGMEM nas_keys[]=
 	  KEY_SPACE, KEY_DH_FN, KEY_ENTER, KEY_DH_NORM,
 };
 
-static char PROGMEM fn_keys[]=
+const char PROGMEM fn_keys[]=
 	{ 
 	  // <- uparrow del f2
 	  KEY_LEFT, KEY_UP, KEY_DELETE, KEY_F2,

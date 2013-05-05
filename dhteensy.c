@@ -110,7 +110,7 @@ void set_selector(uint8_t selector) {
 	}
 }
 
-int read_keys(void) {
+uint8_t read_keys(void) {
 	/* key:
 	   original:
 	   P1 upper 4 bits, 4,5,6,7
@@ -128,7 +128,7 @@ int read_keys(void) {
 	return(b);
 }
 
-int scan_line(uint8_t selector) {
+uint8_t scan_line(uint8_t selector) {
 	set_selector(selector);
 	_delay_us(100);
 	return(read_keys());
